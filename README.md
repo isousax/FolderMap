@@ -110,26 +110,12 @@ Exemplo de saída copiada:
 
 ---
 
-## 📸 Screenshots
-
-Adicione na pasta `assets/` imagens como:
-
-* `screenshot-1.png` — tela inicial com botão *Escolher Pasta*
-* `screenshot-2.png` — árvore renderizada com pastas expandidas
-* `screenshot-3.png` — modo escuro
-
-> Sugestão: gere miniaturas 1280×720 para boa visualização no GitHub.
-
----
-
 ## 🙌 Contribuições
 
 Contribuições são bem-vindas! Sugestões de melhorias:
 
-* Separar CSS/JS em arquivos distintos.
 * Permitir download da estrutura como `.txt` ou `.md` diretamente.
 * Melhorar acessibilidade (teclado, labels e foco).
-* Adicionar testes e exemplo de integração com CI.
 
 1. Fork o repositório
 2. Crie uma branch: `git checkout -b feat/minha-melhoria`
