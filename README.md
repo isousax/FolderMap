@@ -29,12 +29,13 @@ O projeto foi construído com **HTML/CSS/JavaScript puro** (sem build step) e us
 ## 🗂️ Estrutura do repositório
 
 ```text
-├─ index.html        # Página principal (HTML/CSS/JS tudo em um arquivo)
-├─ README.md         # (você está vendo)
-└─ assets/           # (opcional) screenshots, gifs, exemplos
+├─ index.html
+├─ README.md
+├─ script/
+│  └─ script.js
+└─ style/
+   └─ index.css
 ```
-
-> Observação: o projeto é entregue como um único `index.html`; você pode quebrar em arquivos se preferir.
 
 ---
 
@@ -155,15 +156,6 @@ Distribuído sob a licença **MIT**. Veja o arquivo `LICENSE` para mais detalhes
 
 ## ✨ Créditos
 
-* Ícones: [Font Awesome](https://fontawesome.com)
-* Inspirado em boas práticas de UX para visualização de árvores de arquivos.
+* Autor: [@isousa.x](https://www.instagram.com/isousa.x/)
 
 ---
-
-Se quiser, eu também:
-
-* 📄 gero uma versão curta (one-liner) do README para o GitHub
-* 🌎 traduzo para inglês
-* 🖼️ crio badges personalizados e um `favicon`
-
-Diz qual dessas você quer que eu faça em seguida!
