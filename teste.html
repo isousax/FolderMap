@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mapeador de Estrutura de Pastas</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #4361ee;
+      --primary-dark: #3a56d4;
+      --secondary: #7209b7;
+      --light: #f8f9fa;
+      --dark: #212529;
+      --surface: #ffffff;
+      --surface-dark: #1e1e1e;
+      --text: #333333;
+      --text-light: #6c757d;
+      --text-dark: #e9ecef;
+      --border: #e2e8f0;
+      --border-dark: #2d3748;
+      --success: #4cc9f0;
+      --success-dark: #3aa8c9;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --radius: 12px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .dark-theme {
+      --primary: #5a75f5;
+      --primary-dark: #4361ee;
+      --light: #121212;
+      --surface: #1e1e1e;
+      --text: #e9ecef;
+      --text-light: #a0aec0;
+      --border: #2d3748;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #f0f4ff 0%, #e6f0ff 100%);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 20px;
+      min-height: 100vh;
+      transition: var(--transition);
+    }
+
+    body.dark-theme {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding: 30px 20px;
+      position: relative;
+    }
+
+    .theme-toggle {
+      position: absolute;
+      top: 20px;
+      right: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      width: 50px;
+      height: 26px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      padding: 0 3px;
+      transition: var(--transition);
+    }
+
+    .theme-toggle::before {
+      content: '';
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--primary);
+      transition: var(--transition);
+      transform: translateX(0);
+    }
+
+    .dark-theme .theme-toggle::before {
+      transform: translateX(24px);
+    }
+
+    h1 {
+      color: var(--primary);
+      margin-bottom: 12px;
+      font-size: 2.5rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .subtitle {
+      color: var(--text-light);
+      font-size: 1.1rem;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background-color: var(--surface);
+      border-radius: var(--radius);
+      padding: 30px;
+      margin-bottom: 25px;
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+      border: 1px solid var(--border);
+    }
+
+    .card:hover {
+      box-shadow: var(--shadow-lg);
+    }
+
+    .card-title {
+      color: var(--primary);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.25rem;
+    }
+
+    .upload-section p {
+      margin-bottom: 20px;
+      color: var(--text-light);
+      text-align: center;
+    }
+
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 60px 40px;
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition);
+      background-color: var(--light);
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .drop-zone:hover {
+      border-color: var(--primary);
+      background-color: rgba(67, 97, 238, 0.05);
+    }
+
+    .drop-zone.drag-over {
+      border-color: var(--primary);
+      background-color: rgba(67, 97, 238, 0.1);
+      transform: scale(1.02);
+    }
+
+    .dark-theme .drop-zone {
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+
+    .dark-theme .drop-zone:hover,
+    .dark-theme .drop-zone.drag-over {
+      background-color: rgba(67, 97, 238, 0.1);
+    }
+
+    .drop-zone-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .drop-zone-icon {
+      font-size: 3rem;
+      color: var(--primary);
+      opacity: 0.7;
+    }
+
+    .drop-zone-text {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .drop-zone-subtext {
+      font-size: 0.9rem;
+      color: var(--text-light);
+    }
+
+    .folder-input {
+      width: 0.1px;
+      height: 0.1px;
+      opacity: 0;
+      overflow: hidden;
+      position: absolute;
+      z-index: -1;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      background-color: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-weight: 600;
+      transition: var(--transition);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .btn:hover:not(:disabled) {
+      background-color: var(--light);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background-color: var(--primary-dark);
+    }
+
+    .btn-success {
+      background-color: var(--success);
+      color: white;
+      border-color: var(--success);
+    }
+
+    .btn-success:hover:not(:disabled) {
+      background-color: var(--success-dark);
+    }
+
+    .search-box {
+      flex-grow: 1;
+      max-width: 300px;
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.9rem;
+      background: var(--surface);
+      color: var(--text);
+      transition: var(--transition);
+    }
+
+    .search-box:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+    }
+
+    .output-section {
+      min-height: 400px;
+    }
+
+    .output-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .file-count {
+      background-color: var(--primary);
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .tree {
+      font-family: 'Fira Code', 'Courier New', monospace;
+      font-size: 0.95rem;
+      max-height: 500px;
+      overflow-y: auto;
+      padding: 20px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background-color: var(--light);
+      transition: var(--transition);
+    }
+
+    .dark-theme .tree {
+      background-color: rgba(0, 0, 0, 0.2);
+    }
+
+    .tree ul {
+      list-style-type: none;
+      padding-left: 24px;
+    }
+
+    .tree li {
+      margin: 8px 0;
+      position: relative;
+    }
+
+    .folder {
+      font-weight: 600;
+      color: var(--primary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: var(--transition);
+    }
+
+    .folder:hover {
+      background-color: rgba(67, 97, 238, 0.1);
+    }
+
+    .folder i {
+      transition: transform 0.3s ease;
+    }
+
+    .folder.collapsed i.fa-caret-right {
+      transform: rotate(-90deg);
+    }
+
+    .file {
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: var(--transition);
+    }
+
+    .file:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .dark-theme .file:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .empty-folder {
+      color: var(--text-light);
+      font-style: italic;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .status {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-light);
+    }
+
+    .status i {
+      margin-bottom: 15px;
+      opacity: 0.5;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: var(--success);
+      color: white;
+      padding: 14px 22px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 1000;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: var(--transition);
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .toast.error {
+      background-color: #e74c3c;
+    }
+
+    @media (max-width: 768px) {
+      .controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .search-box {
+        max-width: 100%;
+      }
+      
+      .output-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      h1 {
+        font-size: 2rem;
+      }
+    }
+
+    /* Scrollbar personalizada */
+    .tree::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .tree::-webkit-scrollbar-track {
+      background: var(--light);
+      border-radius: 4px;
+    }
+
+    .tree::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+
+    .tree::-webkit-scrollbar-thumb:hover {
+      background: var(--text-light);
+    }
+
+    .dark-theme .tree::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .dark-theme .tree::-webkit-scrollbar-thumb {
+      background: var(--border-dark);
+    }
+
+    /* Animações */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.5s ease forwards;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="theme-toggle" id="themeToggle"></div>
+      <h1><i class="fas fa-folder-tree"></i> Mapeador de Estrutura de Pastas</h1>
+      <p class="subtitle">Visualize e analise a estrutura de pastas do seu projeto de forma intuitiva</p>
+    </header>
+
+    <section class="card upload-section">
+      <p>Arraste e solte arquivos aqui ou clique para selecionar uma pasta</p>
+      <div class="drop-zone" id="dropZone">
+        <input type="file" id="folderInput" class="folder-input" webkitdirectory multiple />
+        <div class="drop-zone-content">
+          <div class="drop-zone-icon">
+            <i class="fas fa-cloud-upload-alt"></i>
+          </div>
+          <div class="drop-zone-text">Arraste arquivos aqui</div>
+          <div class="drop-zone-subtext">ou clique para selecionar uma pasta</div>
+        </div>
+      </div>
+      <div class="controls">
+        <input type="text" id="searchInput" class="search-box" placeholder="Buscar arquivos/pastas..." disabled>
+        <button id="expandAllBtn" class="btn" disabled>
+          <i class="fas fa-expand-alt"></i> Expandir
+        </button>
+        <button id="collapseAllBtn" class="btn" disabled>
+          <i class="fas fa-compress-alt"></i> Recolher
+        </button>
+        <button id="copyBtn" class="btn btn-primary" disabled>
+          <i class="far fa-copy"></i> Copiar Estrutura
+        </button>
+      </div>
+    </section>
+
+    <section class="card output-section">
+      <div class="output-header">
+        <h3 class="card-title">
+          <i class="fas fa-sitemap"></i> Estrutura da Pasta
+        </h3>
+        <span id="fileCount" class="file-count hidden">0 itens</span>
+      </div>
+      <div id="output" class="tree">
+        <div class="status">
+          <i class="fas fa-folder-open fa-3x"></i>
+          <p>Nenhuma pasta selecionada</p>
+          <p>Selecione uma pasta para visualizar sua estrutura</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div id="toast" class="toast">
+    <i class="fas fa-check-circle"></i>
+    <span id="toastMessage">Estrutura copiada para a área de transferência!</span>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const folderInput = document.getElementById('folderInput');
+      const dropZone = document.getElementById('dropZone');
+      const output = document.getElementById('output');
+      const searchInput = document.getElementById('searchInput');
+      const expandAllBtn = document.getElementById('expandAllBtn');
+      const collapseAllBtn = document.getElementById('collapseAllBtn');
+      const copyBtn = document.getElementById('copyBtn');
+      const fileCount = document.getElementById('fileCount');
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toastMessage');
+      const themeToggle = document.getElementById('themeToggle');
+      const body = document.body;
+
+      let fileTree = null;
+      let filePaths = [];
+
+      // Alternar tema
+      themeToggle.addEventListener('click', () => {
+        body.classList.toggle('dark-theme');
+        // Salvar preferência no localStorage
+        const isDark = body.classList.contains('dark-theme');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      });
+
+      // Verificar preferência de tema salva
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark') {
+        body.classList.add('dark-theme');
+      }
+
+      // Eventos de drag and drop
+      dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('drag-over');
+      });
+
+      dropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        if (!dropZone.contains(e.relatedTarget)) {
+          dropZone.classList.remove('drag-over');
+        }
+      });
+
+      dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        
+        const items = e.dataTransfer.items;
+        const files = [];
+        
+        if (items) {
+          for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            if (item.kind === 'file') {
+              const entry = item.webkitGetAsEntry();
+              if (entry) {
+                if (entry.isDirectory) {
+                  processDirectory(entry, files, '').then(() => {
+                    if (files.length > 0) {
+                      processFiles(files);
+                    }
+                  });
+                } else {
+                  files.push({
+                    file: item.getAsFile(),
+                    relativePath: entry.name
+                  });
+                  processFiles(files);
+                }
+              }
+            }
+          }
+        }
+      });
+
+      // Clique na zona de drop para abrir seletor de arquivos
+      dropZone.addEventListener('click', () => {
+        folderInput.click();
+      });
+
+      // Função para processar diretórios recursivamente
+      async function processDirectory(dirEntry, files, path) {
+        return new Promise((resolve) => {
+          const dirReader = dirEntry.createReader();
+          
+          function readEntries() {
+            dirReader.readEntries((entries) => {
+              if (entries.length === 0) {
+                resolve();
+                return;
+              }
+              
+              const promises = [];
+              
+              for (const entry of entries) {
+                const entryPath = path ? `${path}/${entry.name}` : entry.name;
+                
+                if (entry.isDirectory) {
+                  promises.push(processDirectory(entry, files, entryPath));
+                } else {
+                  promises.push(new Promise((resolveFile) => {
+                    entry.file((file) => {
+                      files.push({
+                        file: file,
+                        relativePath: entryPath
+                      });
+                      resolveFile();
+                    });
+                  }));
+                }
+              }
+              
+              Promise.all(promises).then(() => {
+                readEntries(); // Continuar lendo mais entradas
+              });
+            });
+          }
+          
+          readEntries();
+        });
+      }
+
+      // Função para processar arquivos e construir a árvore
+      function processFiles(files) {
+        filePaths = files.map(f => f.relativePath);
+        fileTree = buildTree(filePaths);
+
+        output.innerHTML = '';
+        const treeElement = renderTree(fileTree);
+        output.appendChild(treeElement);
+        
+        // Atualizar contador
+        const totalItems = filePaths.length;
+        fileCount.textContent = `${totalItems} ${totalItems === 1 ? 'item' : 'itens'}`;
+        fileCount.classList.remove('hidden');
+        
+        // Habilitar controles
+        searchInput.disabled = false;
+        expandAllBtn.disabled = false;
+        collapseAllBtn.disabled = false;
+        copyBtn.disabled = false;
+        
+        // Recolher todos os itens inicialmente
+        collapseAll();
+      }
+
+      // Função para construir a árvore de arquivos
+      function buildTree(paths) {
+        const root = {};
+        for (const path of paths) {
+          const parts = path.split('/');
+          let current = root;
+          for (const part of parts) {
+            if (part === '') continue;
+            if (!current[part]) {
+              current[part] = { __isFile: false, children: {} };
+            }
+            current = current[part].children;
+          }
+          // Marcar o último elemento como arquivo
+          if (parts.length > 0) {
+            const lastPart = parts[parts.length - 1];
+            if (lastPart !== '') {
+              const parentParts = parts.slice(0, -1);
+              let parent = root;
+              for (const part of parentParts) {
+                if (part === '') continue;
+                parent = parent[part].children;
+              }
+              parent[lastPart].__isFile = true;
+            }
+          }
+        }
+        return root;
+      }
+
+      // Função para renderizar a árvore
+      function renderTree(node, level = 0, parentPath = '') {
+        const ul = document.createElement('ul');
+        
+        // Ordenar: pastas primeiro, depois arquivos
+        const sortedKeys = Object.keys(node).sort((a, b) => {
+          const aIsFile = node[a].__isFile;
+          const bIsFile = node[b].__isFile;
+          if (aIsFile && !bIsFile) return 1;
+          if (!aIsFile && bIsFile) return -1;
+          return a.localeCompare(b);
+        });
+
+        for (const key of sortedKeys) {
+          const isFile = node[key].__isFile;
+          const hasChildren = Object.keys(node[key].children).length > 0;
+          const currentPath = parentPath ? `${parentPath}/${key}` : key;
+          
+          const li = document.createElement('li');
+          li.dataset.path = currentPath;
+          
+          if (isFile) {
+            // É um arquivo
+            const fileElement = document.createElement('div');
+            fileElement.className = 'file fade-in';
+            fileElement.innerHTML = `<i class="far fa-file"></i> ${key}`;
+            li.appendChild(fileElement);
+          } else {
+            // É uma pasta
+            const folderElement = document.createElement('div');
+            folderElement.className = 'folder fade-in';
+            
+            if (hasChildren) {
+              folderElement.innerHTML = `<i class="fas fa-caret-right"></i> <i class="far fa-folder"></i> ${key}`;
+              folderElement.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const childList = li.querySelector('ul');
+                if (childList) {
+                  folderElement.classList.toggle('collapsed');
+                  childList.classList.toggle('hidden');
+                }
+              });
+            } else {
+              folderElement.innerHTML = `<i class="far fa-folder"></i> ${key}`;
+              folderElement.style.cursor = 'default';
+            }
+            
+            li.appendChild(folderElement);
+            
+            if (hasChildren) {
+              const childList = renderTree(node[key].children, level + 1, currentPath);
+              li.appendChild(childList);
+            }
+          }
+          
+          ul.appendChild(li);
+        }
+        
+        return ul;
+      }
+
+      // Função para expandir todos os itens
+      function expandAll() {
+        const folders = output.querySelectorAll('.folder');
+        const lists = output.querySelectorAll('ul');
+        
+        folders.forEach(folder => {
+          folder.classList.remove('collapsed');
+        });
+        
+        lists.forEach(list => {
+          list.classList.remove('hidden');
+        });
+      }
+
+      // Função para recolher todos os itens
+      function collapseAll() {
+        const folders = output.querySelectorAll('.folder');
+        const lists = output.querySelectorAll('ul');
+        
+        // Manter apenas o primeiro nível expandido
+        folders.forEach(folder => {
+          if (folder.closest('li').parentElement !== output.querySelector('.tree > ul')) {
+            folder.classList.add('collapsed');
+          }
+        });
+        
+        lists.forEach(list => {
+          if (list.parentElement.parentElement !== output.querySelector('.tree')) {
+            list.classList.add('hidden');
+          }
+        });
+      }
+
+      // Função para filtrar a árvore
+      function filterTree(query) {
+        const allItems = output.querySelectorAll('li');
+        
+        if (!query) {
+          // Mostrar todos os itens
+          allItems.forEach(item => {
+            item.style.display = '';
+            // Expandir para mostrar os itens
+            let parent = item.parentElement;
+            while (parent && parent !== output) {
+              if (parent.tagName === 'UL') {
+                parent.classList.remove('hidden');
+                const folder = parent.previousElementSibling;
+                if (folder && folder.classList.contains('folder')) {
+                  folder.classList.remove('collapsed');
+                }
+              }
+              parent = parent.parentElement;
+            }
+          });
+          return;
+        }
+        
+        // Esconder todos os itens primeiro
+        allItems.forEach(item => {
+          item.style.display = 'none';
+        });
+        
+        // Mostrar apenas os itens que correspondem à busca
+        allItems.forEach(item => {
+          const path = item.dataset.path.toLowerCase();
+          if (path.includes(query.toLowerCase())) {
+            item.style.display = '';
+            
+            // Expandir todos os pais para mostrar o item
+            let parent = item.parentElement;
+            while (parent && parent !== output) {
+              if (parent.tagName === 'UL') {
+                parent.classList.remove('hidden');
+                const folder = parent.previousElementSibling;
+                if (folder && folder.classList.contains('folder')) {
+                  folder.classList.remove('collapsed');
+                }
+              }
+              parent = parent.parentElement;
+            }
+          }
+        });
+      }
+
+      // Função para copiar a estrutura
+      function copyStructure() {
+        let structureText = '';
+        
+        function buildTextStructure(node, indent = '') {
+          const sortedKeys = Object.keys(node).sort((a, b) => {
+            const aIsFile = node[a].__isFile;
+            const bIsFile = node[b].__isFile;
+            if (aIsFile && !bIsFile) return 1;
+            if (!aIsFile && bIsFile) return -1;
+            return a.localeCompare(b);
+          });
+          
+          for (const key of sortedKeys) {
+            const isFile = node[key].__isFile;
+            structureText += `${indent}${isFile ? '📄 ' : '📁 '}${key}\n`;
+            
+            if (!isFile && Object.keys(node[key].children).length > 0) {
+              buildTextStructure(node[key].children, indent + '  ');
+            }
+          }
+        }
+        
+        if (fileTree) {
+          buildTextStructure(fileTree);
+          navigator.clipboard.writeText(structureText)
+            .then(() => {
+              showToast('Estrutura copiada para a área de transferência!');
+            })
+            .catch(err => {
+              console.error('Erro ao copiar: ', err);
+              showToast('Erro ao copiar estrutura!', true);
+            });
+        }
+      }
+
+      // Função para mostrar notificação
+      function showToast(message, isError = false) {
+        toastMessage.textContent = message;
+        
+        if (isError) {
+          toast.classList.add('error');
+          toast.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + toast.innerHTML;
+        } else {
+          toast.classList.remove('error');
+          toast.innerHTML = '<i class="fas fa-check-circle"></i> ' + toast.innerHTML;
+        }
+        
+        toast.classList.add('show');
+        
+        setTimeout(() => {
+          toast.classList.remove('show');
+        }, 3000);
+      }
+
+      // Evento quando uma pasta é selecionada
+      folderInput.addEventListener('change', (event) => {
+        const files = event.target.files;
+        if (!files.length) return;
+
+        filePaths = Array.from(files).map(f => f.webkitRelativePath);
+        fileTree = buildTree(filePaths);
+
+        output.innerHTML = '';
+        const treeElement = renderTree(fileTree);
+        output.appendChild(treeElement);
+        
+        // Atualizar contador
+        const totalItems = filePaths.length;
+        fileCount.textContent = `${totalItems} ${totalItems === 1 ? 'item' : 'itens'}`;
+        fileCount.classList.remove('hidden');
+        
+        // Habilitar controles
+        searchInput.disabled = false;
+        expandAllBtn.disabled = false;
+        collapseAllBtn.disabled = false;
+        copyBtn.disabled = false;
+        
+        // Recolher todos os itens inicialmente
+        collapseAll();
+      });
+
+      // Eventos dos botões
+      expandAllBtn.addEventListener('click', expandAll);
+      collapseAllBtn.addEventListener('click', collapseAll);
+      copyBtn.addEventListener('click', copyStructure);
+      
+      // Evento de busca
+      searchInput.addEventListener('input', (e) => {
+        filterTree(e.target.value);
+      });
+    });
+  </script>
+</body>
+</html>
